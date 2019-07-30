@@ -4,18 +4,18 @@ use crate::chip8::Chip8;
 use std::fs::read;
 use std::{thread, time};
 
-use sdl2::rect::Rect;
-use sdl2::pixels::Color;
+use sdl2::audio::{AudioCallback, AudioSpecDesired, AudioStatus};
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
-use sdl2::audio::{AudioCallback, AudioSpecDesired, AudioStatus};
+use sdl2::pixels::Color;
+use sdl2::rect::Rect;
 
 use clap::{crate_authors, crate_name, crate_version, App, Arg};
 
 struct SquareWave {
     phase_inc: f32,
     phase: f32,
-    volume: f32
+    volume: f32,
 }
 
 impl AudioCallback for SquareWave {
@@ -51,10 +51,9 @@ fn set_key(chip8: &mut Chip8, keycode: Keycode, keydown: bool) {
         Keycode::X => chip8.set_key(13, keydown),
         Keycode::C => chip8.set_key(14, keydown),
         Keycode::V => chip8.set_key(15, keydown),
-        _ => ()
+        _ => (),
     }
 }
-
 
 fn run(file: Vec<u8>) {
     let size = 10;
@@ -62,7 +61,8 @@ fn run(file: Vec<u8>) {
     let mut event_pump = sdl_context.event_pump().unwrap();
 
     let video_subsystem = sdl_context.video().unwrap();
-    let window = video_subsystem.window("Chip8", 64 * size, 32 * size)
+    let window = video_subsystem
+        .window("Chip8", 64 * size, 32 * size)
         .position_centered()
         .build()
         .unwrap();
@@ -74,19 +74,19 @@ fn run(file: Vec<u8>) {
     let desired_spec = AudioSpecDesired {
         freq: Some(44100),
         channels: Some(1),
-        samples: None
+        samples: None,
     };
-    let device = audio_subsystem.open_playback(None, &desired_spec, |spec| {
-        SquareWave {
+    let device = audio_subsystem
+        .open_playback(None, &desired_spec, |spec| SquareWave {
             phase_inc: 440.0 / spec.freq as f32,
             phase: 0.0,
-            volume: 0.25
-        }
-    }).unwrap();
+            volume: 0.25,
+        })
+        .unwrap();
 
     let mut chip8 = Chip8::new();
     chip8.load_font();
-    
+
     canvas.set_draw_color(Color::RGB(0, 0, 0));
     canvas.clear();
 
@@ -94,13 +94,21 @@ fn run(file: Vec<u8>) {
     'running: loop {
         for event in event_pump.poll_iter() {
             match event {
-                Event::Quit { .. } | Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
-                    break 'running
-                },
-                Event::KeyDown { keycode: Some(keycode), ..} => {
+                Event::Quit { .. }
+                | Event::KeyDown {
+                    keycode: Some(Keycode::Escape),
+                    ..
+                } => break 'running,
+                Event::KeyDown {
+                    keycode: Some(keycode),
+                    ..
+                } => {
                     set_key(&mut chip8, keycode, true);
-                },
-                Event::KeyUp { keycode: Some(keycode), ..} => {
+                }
+                Event::KeyUp {
+                    keycode: Some(keycode),
+                    ..
+                } => {
                     set_key(&mut chip8, keycode, false);
                 }
                 _ => {}
@@ -122,20 +130,22 @@ fn run(file: Vec<u8>) {
             }
         }
 
-        let pixels = chip8.display();
-        for h in 0..32 {
-            for w in 0..64 {
-                if pixels[h][w] {
+        let display = chip8.display();
+        for (h, row) in display.iter().enumerate() {
+            for (w, pixel) in row.iter().enumerate() {
+                if *pixel {
                     canvas.set_draw_color(Color::RGB(255, 255, 255));
                 } else {
                     canvas.set_draw_color(Color::RGB(0, 0, 0));
                 }
-                canvas.fill_rect(Rect::new(
-                    w as i32 * size as i32, 
-                    h as i32 * size as i32,
-                    size,
-                    size, 
-                )).unwrap();
+                canvas
+                    .fill_rect(Rect::new(
+                        w as i32 * size as i32,
+                        h as i32 * size as i32,
+                        size,
+                        size,
+                    ))
+                    .unwrap();
             }
         }
         canvas.present();
@@ -143,7 +153,6 @@ fn run(file: Vec<u8>) {
         thread::sleep(time::Duration::from_millis(2));
     }
 }
-
 
 fn main() {
     let matches = App::new(crate_name!())
@@ -167,6 +176,6 @@ fn main() {
             }
             Err(_) => eprintln!("Cannot open file"),
         },
-        None => eprintln!("Please set the -f flag with a file")
+        None => eprintln!("Please set the -f flag with a file"),
     }
 }

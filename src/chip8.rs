@@ -94,8 +94,7 @@ impl Chip8 {
                 self.pc = self.stack[self.sp];
                 self.sp -= 1;
             }
-            (0x0, 0x0, 0x0, 0x0) => {
-            }
+            (0x0, 0x0, 0x0, 0x0) => {}
             (0x1, n1, n2, n3) => {
                 self.pc = (n1 << 8) + (n2 << 4) + n3 - 2;
             }
@@ -163,7 +162,6 @@ impl Chip8 {
                 } else {
                     self.registers[15] = 0;
                     0x100 - (ry - rx)
-                    
                 } as u8;
             }
             (0x8, x, _y, 0x6) => {
@@ -250,7 +248,7 @@ impl Chip8 {
             (0xF, x, 0x0, 0xA) => {
                 match self.keys.iter().position(|k| *k) {
                     Some(i) => self.registers[x as usize] = i as u8,
-                    None => self.pc -= 2
+                    None => self.pc -= 2,
                 };
             }
             (0xF, x, 0x1, 0x5) => {
@@ -273,14 +271,12 @@ impl Chip8 {
                 self.memory[(self.i + 2) as usize] = k3;
             }
             (0xF, x, 0x5, 0x5) => {
-                self.memory[self.i as usize..(self.i + x + 1) as usize].clone_from_slice(
-                    &self.registers[0..(x + 1) as usize]
-                );
+                self.memory[self.i as usize..(self.i + x + 1) as usize]
+                    .clone_from_slice(&self.registers[0..(x + 1) as usize]);
             }
             (0xF, x, 0x6, 0x5) => {
-                self.registers[0..(x + 1) as usize].clone_from_slice(
-                    &self.memory[self.i as usize..(self.i + x + 1) as usize]
-                );
+                self.registers[0..(x + 1) as usize]
+                    .clone_from_slice(&self.memory[self.i as usize..(self.i + x + 1) as usize]);
             }
             opcode => {
                 println!("This opcode does not exist : {:?}", opcode);
